@@ -1,2 +1,2 @@
-leaf: test.c testF.c
-	gcc -o test test.c testF.c -I .
+leaf: leaf.c testF.c
+	gcc -o leaf leaf.c testF.c -I .
