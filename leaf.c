@@ -29,17 +29,19 @@ int main (int argc, char const *argv[])
   listen(socketfd, 15);
 
   int connfd = 0;
-  char response[] = "<html><body><h3>Hello World</h3></body></html>";
+  char response[] = "<html><body><h3>Hello WorldHello WorldHello WorldHello WorldHello World</h3></body></html>";
   printf("Waiting for clients to connect\n");
   while(1) {
     connfd = accept(socketfd,(struct sockaddr*)NULL, NULL);
     if(connfd == -1) perror("Could not accept socket");
     write(connfd, "HTTP/1.1 200 OK\n", 16);
-    write(connfd, "Content-length: 46\n", 19);
+    char contentLength[127];
+    sprintf(contentLength, "Content-length: %d\n", (int)strlen(response));
+    write(connfd, contentLength, strlen(contentLength));
     write(connfd, "Content-Type: text/html\n\n", 25);
     write(connfd, response ,strlen(response));
     close(connfd);
-    sleep(2);
+
   }
 
   return 0;
