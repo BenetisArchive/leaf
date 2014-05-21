@@ -12,8 +12,6 @@
 #include "testF.h"
 #include <pthread.h>
 
-void *serverSocket(void *ptr);
-
 int main (int argc, char const *argv[])
 {
   struct sockaddr_in server_address;
@@ -30,27 +28,20 @@ int main (int argc, char const *argv[])
   // 15 => max connections for backlog(clients who can use this socket)
   // if it exceeds this limit, client will get ECONNREFUSED
   listen(socketfd, 15);
-
+  char response[] = "<html><body><h3>Static content</h3></body></html>";
   int connfd = 0;
   printf("Waiting for clients to connect\n");
   while(1) {
     connfd = accept(socketfd,(struct sockaddr*)NULL, NULL);
     if(connfd == -1) perror("Could not accept socket");
-  	pthread_t tid;
-    pthread_create(&tid, NULL, serverSocket, &connfd);
+    write(connfd, "HTTP/1.1 200 OK\n", 16);
+    char contentLength[127];
+    sprintf(contentLength, "Content-length: %d\n", (int)strlen(response));
+    write(connfd, contentLength, strlen(contentLength));
+    write(connfd, "Content-Type: text/html\n\n", 25);
+    write(connfd, response ,strlen(response));
+    close(connfd);
   }
 
   return 0;
-}
-
-void *serverSocket(void *ptr) {
-  char response[] = "<html><body><h3>Static content</h3></body></html>";
-  int connfd = *((int *)ptr);
-  write(connfd, "HTTP/1.1 200 OK\n", 16);
-  char contentLength[127];
-  sprintf(contentLength, "Content-length: %d\n", (int)strlen(response));
-  write(connfd, contentLength, strlen(contentLength));
-  write(connfd, "Content-Type: text/html\n\n", 25);
-  write(connfd, response ,strlen(response));
-  close(connfd);
 }
