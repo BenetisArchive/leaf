@@ -10,6 +10,9 @@
 #include <netinet/in.h>
 //other files
 #include "testF.h"
+#include <pthread.h>
+
+void *serverSocket(void *ptr);
 
 int main (int argc, char const *argv[])
 {
@@ -29,20 +32,26 @@ int main (int argc, char const *argv[])
   listen(socketfd, 15);
 
   int connfd = 0;
-  char response[] = "<html><body><h3>Hello WorldHello WorldHello WorldHello WorldHello World</h3></body></html>";
   printf("Waiting for clients to connect\n");
   while(1) {
     connfd = accept(socketfd,(struct sockaddr*)NULL, NULL);
     if(connfd == -1) perror("Could not accept socket");
-    write(connfd, "HTTP/1.1 200 OK\n", 16);
-    char contentLength[127];
-    sprintf(contentLength, "Content-length: %d\n", (int)strlen(response));
-    write(connfd, contentLength, strlen(contentLength));
-    write(connfd, "Content-Type: text/html\n\n", 25);
-    write(connfd, response ,strlen(response));
-    close(connfd);
+  	pthread_t tid;
+    pthread_create(&tid, NULL, serverSocket, &connfd);
 
   }
 
   return 0;
+}
+
+void *serverSocket(void *ptr) {
+  char response[] = "<html><body><h3>Static content</h3></body></html>";
+  int connfd = *((int *)ptr);
+  write(connfd, "HTTP/1.1 200 OK\n", 16);
+  char contentLength[127];
+  sprintf(contentLength, "Content-length: %d\n", (int)strlen(response));
+  write(connfd, contentLength, strlen(contentLength));
+  write(connfd, "Content-Type: text/html\n\n", 25);
+  write(connfd, response ,strlen(response));
+  close(connfd);
 }
