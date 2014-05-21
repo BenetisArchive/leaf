@@ -13,6 +13,8 @@
 #include <pthread.h>
 #include <stdlib.h>
 
+void *getInfo(void *ptr);
+
 int main (int argc, char const *argv[])
 {
   struct sockaddr_in server_address;
@@ -49,6 +51,10 @@ int main (int argc, char const *argv[])
       exit(0);
     }
   }
-
   return 0;
+}
+
+void *getInfo(void *ptr) {
+pthread_t tid;
+pthread_create(&tid, NULL, getInfo, NULL);
 }
