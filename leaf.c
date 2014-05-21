@@ -31,7 +31,9 @@ int main (int argc, char const *argv[])
   // 15 => max connections for backlog(clients who can use this socket)
   // if it exceeds this limit, client will get ECONNREFUSED
   listen(socketfd, 15);
-  char response[] = "<html><body><h3>Static content</h3></body></html>";
+  char *response;
+  response = (char *)malloc(1>>5);
+  response = "<html><body><h3>Waiting</h3></body></html>";
   int connfd = 0;
   printf("Waiting for clients to connect\n");
   while(1) {
@@ -43,6 +45,18 @@ int main (int argc, char const *argv[])
     } else {
       write(connfd, "HTTP/1.1 200 OK\n", 16);
       char contentLength[127];
+
+      pthread_t tid;
+      pthread_create(&tid, NULL, getInfo, NULL);
+
+      void *return_value;
+      if(pthread_join(tid, &return_value)) { // BLOCKING ;(
+        fprintf(stderr, "Failed to create thread\n");
+        return 2;
+      }
+      response = (char *)return_value;
+      printf("%s\n", response);
+
       sprintf(contentLength, "Content-length: %d\n", (int)strlen(response));
       write(connfd, contentLength, strlen(contentLength));
       write(connfd, "Content-Type: text/html\n\n", 25);
@@ -51,10 +65,13 @@ int main (int argc, char const *argv[])
       exit(0);
     }
   }
+  free(response);
   return 0;
 }
 
 void *getInfo(void *ptr) {
-pthread_t tid;
-pthread_create(&tid, NULL, getInfo, NULL);
+  FILE* file = popen("top -b -n1 2>&1", "r");
+  char buffer[1>>5];
+  fgets(buffer, 1>>5, file);
+  pthread_exit((void *)buffer);
 }
