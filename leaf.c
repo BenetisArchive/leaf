@@ -11,6 +11,7 @@
 //other files
 #include "testF.h"
 #include <pthread.h>
+#include <stdlib.h>
 
 int main (int argc, char const *argv[])
 {
@@ -34,13 +35,19 @@ int main (int argc, char const *argv[])
   while(1) {
     connfd = accept(socketfd,(struct sockaddr*)NULL, NULL);
     if(connfd == -1) perror("Could not accept socket");
-    write(connfd, "HTTP/1.1 200 OK\n", 16);
-    char contentLength[127];
-    sprintf(contentLength, "Content-length: %d\n", (int)strlen(response));
-    write(connfd, contentLength, strlen(contentLength));
-    write(connfd, "Content-Type: text/html\n\n", 25);
-    write(connfd, response ,strlen(response));
-    close(connfd);
+    pid_t pid = fork();
+    if (!pid) {
+      close(connfd);
+    } else {
+      write(connfd, "HTTP/1.1 200 OK\n", 16);
+      char contentLength[127];
+      sprintf(contentLength, "Content-length: %d\n", (int)strlen(response));
+      write(connfd, contentLength, strlen(contentLength));
+      write(connfd, "Content-Type: text/html\n\n", 25);
+      write(connfd, response ,strlen(response));
+      close(connfd);
+      exit(0);
+    }
   }
 
   return 0;
