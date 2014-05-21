@@ -38,7 +38,6 @@ int main (int argc, char const *argv[])
     if(connfd == -1) perror("Could not accept socket");
   	pthread_t tid;
     pthread_create(&tid, NULL, serverSocket, &connfd);
-
   }
 
   return 0;
