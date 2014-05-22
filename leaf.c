@@ -55,23 +55,24 @@ int main (int argc, char const *argv[])
         return 2;
       }
       response = (char *)return_value;
-      printf("%s\n", response);
 
       sprintf(contentLength, "Content-length: %d\n", (int)strlen(response));
       write(connfd, contentLength, strlen(contentLength));
       write(connfd, "Content-Type: text/html\n\n", 25);
       write(connfd, response ,strlen(response));
       close(connfd);
+      free(return_value);
       exit(0);
     }
+    // usleep(100);
   }
   free(response);
   return 0;
 }
 
 void *getInfo(void *ptr) {
-  FILE* file = popen("top -b -n1 2>&1", "r");
-  char buffer[1>>5];
-  fgets(buffer, 1>>5, file);
+  FILE* file = popen("/usr/bin/top -b -n1 2>&1", "r");
+  char* buffer = malloc(100000000);
+  fgets(buffer, 100000000 , file);
   pthread_exit((void *)buffer);
 }
