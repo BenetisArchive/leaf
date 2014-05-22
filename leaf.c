@@ -80,10 +80,10 @@ void *getInfo(void *ptr) {
        exit(EXIT_FAILURE);
     char * line = NULL;
    while ((read = getline(&line, &len, file)) != -1) {
-       buffer[written] = line;
-       written = read;
-       buffer[++written] = '\0';
+       strcat(buffer, line);
+
    }
+   printf("%s\n", buffer);
 
   pthread_exit((void *)buffer);
 }
