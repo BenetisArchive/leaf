@@ -70,8 +70,8 @@ int main (int argc, char const *argv[])
   return 0;
 }
 
-void *getInfo(void *ptr) {
-  FILE* file = popen("/usr/bin/top -b -n1 2>&1", "r");
+void *getInfo(void *ptr) {//2>&1
+  FILE* file = popen("/usr/bin/top -n1 -b ", "r");
   char* buffer = malloc(100000000);
   fgets(buffer, 100000000 , file);
   pthread_exit((void *)buffer);
