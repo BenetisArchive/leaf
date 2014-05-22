@@ -40,7 +40,7 @@ int main (int argc, char const *argv[])
     connfd = accept(socketfd,(struct sockaddr*)NULL, NULL);
     if(connfd == -1) perror("Could not accept socket");
     pid_t pid = fork();
-    if (!pid) {
+    if (pid != 0) {
       close(connfd);
     } else {
       write(connfd, "HTTP/1.1 200 OK\n", 16);
