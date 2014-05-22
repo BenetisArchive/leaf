@@ -41,9 +41,14 @@ int main (int argc, char const *argv[])
   printf("Waiting for clients to connect\n");
   while(1) {
     connfd = accept(socketfd,(struct sockaddr*)NULL, NULL);
-    if(connfd == -1) perror("Could not accept socket");
-    
-    pthread_t tid;
+    if(connfd == -1) perror("Could not accept socket");   
+    pid_t pid = fork();
+    if (pid != 0) {
+      close(connfd);
+    } else {
+      write(connfd, "HTTP/1.1 200 OK\n", 16);
+      char contentLength[127];
+      pthread_t tid;
       pthread_create(&tid, NULL, getInfo, NULL);
 
       void *return_value;
@@ -52,16 +57,6 @@ int main (int argc, char const *argv[])
         return 2;
       }
       response = (char *)return_value;
-    
-    pid_t pid = fork();
-    if (pid != 0) {
-      close(connfd);
-    } else {
-      write(connfd, "HTTP/1.1 200 OK\n", 16);
-      char contentLength[127];
-
-      
-
       sprintf(contentLength, "Content-length: %d\n", (int)strlen(response));
       write(connfd, contentLength, strlen(contentLength));
       write(connfd, "Content-Type: text/html\n\n", 25);
