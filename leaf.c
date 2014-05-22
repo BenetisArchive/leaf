@@ -15,8 +15,11 @@
 
 void *getInfo(void *ptr);
 
+void catchInt(int interrupt);
+
 int main (int argc, char const *argv[])
 {
+  signal(SIGINT, catchInt);
   struct sockaddr_in server_address;
   int socketfd = socket(AF_INET, SOCK_STREAM, 0);
   memset(&server_address, '0', sizeof(server_address));
@@ -39,14 +42,8 @@ int main (int argc, char const *argv[])
   while(1) {
     connfd = accept(socketfd,(struct sockaddr*)NULL, NULL);
     if(connfd == -1) perror("Could not accept socket");
-    pid_t pid = fork();
-    if (pid != 0) {
-      close(connfd);
-    } else {
-      write(connfd, "HTTP/1.1 200 OK\n", 16);
-      char contentLength[127];
-
-      pthread_t tid;
+    
+    pthread_t tid;
       pthread_create(&tid, NULL, getInfo, NULL);
 
       void *return_value;
@@ -55,6 +52,15 @@ int main (int argc, char const *argv[])
         return 2;
       }
       response = (char *)return_value;
+    
+    pid_t pid = fork();
+    if (pid != 0) {
+      close(connfd);
+    } else {
+      write(connfd, "HTTP/1.1 200 OK\n", 16);
+      char contentLength[127];
+
+      
 
       sprintf(contentLength, "Content-length: %d\n", (int)strlen(response));
       write(connfd, contentLength, strlen(contentLength));
@@ -75,4 +81,8 @@ void *getInfo(void *ptr) {//2>&1
   char* buffer = malloc(100000000);
   fgets(buffer, 100000000 , file);
   pthread_exit((void *)buffer);
+}
+
+void catchInt(int interrupt) {
+	exit(1);
 }
