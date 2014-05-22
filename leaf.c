@@ -81,9 +81,8 @@ void *getInfo(void *ptr) {
     char * line = NULL;
    while ((read = getline(&line, &len, file)) != -1) {
        strcat(buffer, line);
-
+       strcat(buffer, "<br />");
    }
-   printf("%s\n", buffer);
 
   pthread_exit((void *)buffer);
 }
