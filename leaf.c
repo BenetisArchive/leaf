@@ -14,13 +14,9 @@
 #include <stdlib.h>
 
 void *getInfo(void *ptr);
-char *replacestr(char *string, char *sub, char *replace);
-
-void catchInt(int interrupt);
 
 int main (int argc, char const *argv[])
 {
-  signal(SIGINT, catchInt);
   struct sockaddr_in server_address;
   int socketfd = socket(AF_INET, SOCK_STREAM, 0);
   memset(&server_address, '0', sizeof(server_address));
@@ -44,11 +40,12 @@ int main (int argc, char const *argv[])
     connfd = accept(socketfd,(struct sockaddr*)NULL, NULL);
     if(connfd == -1) perror("Could not accept socket");
     pid_t pid = fork();
-    if (pid != 0) {
+    if (!pid) {
       close(connfd);
     } else {
       write(connfd, "HTTP/1.1 200 OK\n", 16);
       char contentLength[127];
+
       pthread_t tid;
       pthread_create(&tid, NULL, getInfo, NULL);
 
@@ -58,6 +55,7 @@ int main (int argc, char const *argv[])
         return 2;
       }
       response = (char *)return_value;
+
       sprintf(contentLength, "Content-length: %d\n", (int)strlen(response));
       write(connfd, contentLength, strlen(contentLength));
       write(connfd, "Content-Type: text/html\n\n", 25);
@@ -72,38 +70,20 @@ int main (int argc, char const *argv[])
   return 0;
 }
 
-void *getInfo(void *ptr) {//2>&1
-  FILE* file = popen("/usr/bin/top -n1 -b ", "r");
-  char* buffer = malloc(1024*1024*10);
-  replacestr(buffer, "\n", "<br />");
-  fgets(buffer, 1024*1024*10 , file);
+void *getInfo(void *ptr) {
+  FILE* file = popen("/usr/bin/top -b -n1 2>&1", "r");
+  char* buffer = malloc(100000000);
+  size_t len = 0;
+  ssize_t read;
+  int written = 0;
+   if (file == NULL)
+       exit(EXIT_FAILURE);
+    char * line = NULL;
+   while ((read = getline(&line, &len, file)) != -1) {
+       buffer[written] = line;
+       written = read;
+       buffer[++written] = '\0';
+   }
+
   pthread_exit((void *)buffer);
-}
-
-void catchInt(int interrupt) {
-	exit(1);
-}
-
-char *replacestr(char *string, char *sub, char *replace)
-    {
-    if(!string || !sub || !replace) return NULL;
-    char *pos = string; int found = 0;
-    while((pos = strstr(pos, sub))){
-              pos += strlen(sub);
-              found++;
-    }
-    if(found == 0) return NULL;
-    int size = ((strlen(string) - (strlen(sub) * found)) + (strlen(replace) * found)) + 1;
-    char *result = (char*)malloc(size);
-    pos = string;
-    char *pos1;
-    while((pos1 = strstr(pos, sub))){
-              int len = (pos1 - pos);
-              strncat(result, pos, len);
-              strncat(result, replace, strlen(replace));
-              pos = (pos1 + strlen(sub));
-    }
-    if(pos != (string + strlen(string)))
-              strncat(result, pos, (string - pos));
-    return result;
 }
