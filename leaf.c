@@ -16,6 +16,13 @@
 void *getInfo(void *ptr);
 void catchInt(int interrupt);
 
+void sigchildCatch(int sig) {
+  if(sig == SIGCHLD) {
+    int status;
+    wait(status);
+  }
+}
+
 int main (int argc, char const *argv[])
 {
   printf("(C) 2014 Žygimantas Benetis, Simonas Stepanovas, IF-2/7\n");
@@ -23,7 +30,7 @@ int main (int argc, char const *argv[])
   int socketfd = socket(AF_INET, SOCK_STREAM, 0);
   memset(&server_address, '0', sizeof(server_address));
   signal(SIGINT, catchInt);
- 
+  signal(SIGCHLD, sigchildCatch);
 
   server_address.sin_family = AF_INET;
   server_address.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -57,12 +64,12 @@ int main (int argc, char const *argv[])
       close(connfd);
     } else {
       write(connfd, "HTTP/1.1 200 OK\n", 16);
-      char contentLength[127];     
+      char contentLength[127];
       sprintf(contentLength, "Content-length: %d\n", (int)strlen(response));
       write(connfd, contentLength, strlen(contentLength));
       write(connfd, "Content-Type: text/html\n\n", 25);
       write(connfd, response ,strlen(response));
-      close(connfd);     
+      close(connfd);
       exit(0);
     }
     free(return_value);
