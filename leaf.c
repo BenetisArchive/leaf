@@ -1,3 +1,4 @@
+
 #include "stdio.h"
 #include <string.h>
 #include <unistd.h>
@@ -12,6 +13,7 @@
 #include "testF.h"
 #include <pthread.h>
 #include <stdlib.h>
+#include <time.h>
 
 void *getInfo(void *ptr);
 void catchInt(int interrupt);
@@ -31,6 +33,12 @@ int main (int argc, char const *argv[])
   memset(&server_address, '0', sizeof(server_address));
   signal(SIGINT, catchInt);
   signal(SIGCHLD, sigchildCatch);
+  double seconds;
+  void *return_value;
+  time_t time1;
+  time_t time2;
+  time(&time1);
+  wait(1);
 
   server_address.sin_family = AF_INET;
   server_address.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -48,17 +56,24 @@ int main (int argc, char const *argv[])
   int connfd = 0;
   printf("Waiting for clients to connect\n");
   while(1) {
-	pthread_t tid;
-    pthread_create(&tid, NULL, getInfo, NULL);
-
-    void *return_value;
-    if(pthread_join(tid, &return_value)) { // BLOCKING ;(
-      fprintf(stderr, "Failed to create thread\n");
-      return 2;
-    }
-    response = (char *)return_value;
     connfd = accept(socketfd,(struct sockaddr*)NULL, NULL);
     if(connfd == -1) perror("Could not accept socket");
+    time(&time2);
+    seconds = difftime(time2, time1);
+    if(seconds >= 1) {
+		pthread_t tid;
+		pthread_create(&tid, NULL, getInfo, NULL);
+
+		void *return_value;
+		if(pthread_join(tid, &return_value)) { // BLOCKING ;(
+			fprintf(stderr, "Failed to create thread\n");
+			return 2;
+		}
+		response = (char *)return_value;
+		time(&time1);
+
+
+	}
     pid_t pid = fork();
     if (pid != 0) {
       close(connfd);
@@ -72,10 +87,10 @@ int main (int argc, char const *argv[])
       close(connfd);
       exit(0);
     }
-    free(return_value);
-    // usleep(100);
+        // usleep(100);
   }
   free(response);
+  free(return_value);
   return 0;
 }
 
