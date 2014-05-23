@@ -21,6 +21,7 @@ void catchInt(int interrupt);
 void sigchildCatch(int sig) {
   if(sig == SIGCHLD) {
     int status;
+    waitpid(-1, status, WNOHANG);
     wait(status);
   }
 }
@@ -71,8 +72,6 @@ int main (int argc, char const *argv[])
 		}
 		response = (char *)return_value;
 		time(&time1);
-
-
 	}
     pid_t pid = fork();
     if (pid != 0) {
