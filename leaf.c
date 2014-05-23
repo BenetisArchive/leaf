@@ -41,6 +41,15 @@ int main (int argc, char const *argv[])
   int connfd = 0;
   printf("Waiting for clients to connect\n");
   while(1) {
+	pthread_t tid;
+    pthread_create(&tid, NULL, getInfo, NULL);
+
+    void *return_value;
+    if(pthread_join(tid, &return_value)) { // BLOCKING ;(
+      fprintf(stderr, "Failed to create thread\n");
+      return 2;
+    }
+    response = (char *)return_value;
     connfd = accept(socketfd,(struct sockaddr*)NULL, NULL);
     if(connfd == -1) perror("Could not accept socket");
     pid_t pid = fork();
@@ -48,25 +57,15 @@ int main (int argc, char const *argv[])
       close(connfd);
     } else {
       write(connfd, "HTTP/1.1 200 OK\n", 16);
-      char contentLength[127];
-
-      pthread_t tid;
-      pthread_create(&tid, NULL, getInfo, NULL);
-
-      void *return_value;
-      if(pthread_join(tid, &return_value)) { // BLOCKING ;(
-        fprintf(stderr, "Failed to create thread\n");
-        return 2;
-      }
-      response = (char *)return_value;
+      char contentLength[127];     
       sprintf(contentLength, "Content-length: %d\n", (int)strlen(response));
       write(connfd, contentLength, strlen(contentLength));
       write(connfd, "Content-Type: text/html\n\n", 25);
       write(connfd, response ,strlen(response));
-      close(connfd);
-      free(return_value);
+      close(connfd);     
       exit(0);
     }
+    free(return_value);
     // usleep(100);
   }
   free(response);
