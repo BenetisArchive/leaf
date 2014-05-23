@@ -10,7 +10,6 @@
 #include <pthread.h>
 #include <netinet/in.h>
 //other files
-#include "testF.h"
 #include <pthread.h>
 #include <stdlib.h>
 #include <time.h>
