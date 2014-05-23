@@ -18,10 +18,12 @@ void catchInt(int interrupt);
 
 int main (int argc, char const *argv[])
 {
+  printf("(C) 2014 Žygimantas Benetis, Simonas Stepanovas, IF-2/7\n");
   struct sockaddr_in server_address;
   int socketfd = socket(AF_INET, SOCK_STREAM, 0);
   memset(&server_address, '0', sizeof(server_address));
   signal(SIGINT, catchInt);
+ 
 
   server_address.sin_family = AF_INET;
   server_address.sin_addr.s_addr = htonl(INADDR_ANY);
